@@ -51,4 +51,4 @@ class MainView(QMainWindow):
 
     # check code for errors
     def compile(self):
-            pass
+            pass # pass porque esta pendiente la integracion del compilador en la interfaz
