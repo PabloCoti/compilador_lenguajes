@@ -137,7 +137,8 @@ class Compiler:
             pass
 
         def check_if_statement(statement):
-            pattern = r"\s*si\s*\(.+\)\s*\{\s*.+\s*\}(?:\s*sino\s+si\s*\(.+\)\s*\{\s*.+\s*\})*(?:\s*sino\s*\{\s*.+\s*\})?"
+            pattern = r"\s*si\s*\(.+\)\s*\{\s*.+\s*\}(?:\s*sino\s+si\s*\(.+\)\s*\{\s*.+\s*\})*(?:\s*sino\s*\{" \
+                      r"\s*.+\s*\})?"
 
             match = re.match(pattern, statement)
             if match:
