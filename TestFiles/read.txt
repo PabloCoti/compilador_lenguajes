@@ -9,15 +9,27 @@ cadena string = "hola123";
 cadena string1 = "123hola";
 cadena string2 = "HOLA MUNDO!";
 
-si (int == 10)
-    int += 1;
-} sino {
-    int = 10;
+sino {
+    int = 1;
 }
 
-si (string == "hola123")
+si (int == 10){
+    int += 1;
+
+} sino si (int == 0){
+    int = 10;
+
+} sino {
+    int = 0;
+}
+
+si (string=="hola123")
 {
     string = "adios321";
+
+    si (string == "adios321"){
+        string = "hola123";
+    }
 }
 
 hacer{

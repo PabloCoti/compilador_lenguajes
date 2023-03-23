@@ -82,5 +82,3 @@ class MainView(QMainWindow):
         data = compiled.parse()
 
         self.update_fileValues_text_edit(data)
-
-        compiled.get_counters()

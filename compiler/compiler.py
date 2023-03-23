@@ -1,9 +1,11 @@
 # Libreria para expresiones regulares
 import re
 
+
 # TODO
 # Cambiar diccionarios (a exepcion de reservedWord) por expresiones regulares
 # Cambiar los contadores que dependen de los diccionarios
+# AGREGAR METODOS PARA LOS CONTADORES Y HACER QUE FUCIONEN DENTRO DE LA INTERFAZ
 
 class Compiler:
     def __init__(self, file):
@@ -23,10 +25,10 @@ class Compiler:
                              'cadena': 'Palabra reservada',
                              'si': 'Palabra reservada',
                              'sino': 'Palabra reservada',
-                             'sinosi' : 'Palabra reservada',
+                             'sino si': 'Palabra reservada',
                              'mientras': 'Palabra reservada',
                              'hacer': 'Palabra reservada',
-                             'para' : 'Palabra reservada'}
+                             'para': 'Palabra reservada'}
         self.reservedWord_key = self.reservedWord.keys()
 
         # Declaramos un diccionario "operator" para saber todos los tkns
@@ -115,6 +117,8 @@ class Compiler:
                         name = match.group(2)
                         value = match.group(3)
 
+                        self.declared_variables[name] = value
+
                         message = f"Tipo de variable: {type}\nNombre de variable: {name}\nValor de la variable: {value}"
 
                         eval(value)
@@ -129,91 +133,59 @@ class Compiler:
             else:
                 return f"{declaration}\nLa declaracion de la variable no es correcta"
 
-        def check_syntax(lines):
-            for i, line in enumerate(lines):
-                print(line)
-                if "if" in line:
-                    # Look for opening bracket
-                    try:
-                        start_index = line.index("{")
-
-                    except ValueError:
-                        print(f"Error: Line {i + 1}: Missing opening bracket for if statement")
-                        return False
-
-                    # Check if there's a closing bracket on the same line
-                    if "}" in line:
-                        try:
-                            end_index = line.index("}")
-                            if end_index < start_index:
-                                print(f"Error: Line {i + 1}: Closing bracket before opening bracket")
-                                return False
-                        except ValueError:
-                            pass  # Ignore closing brackets on same line
-
-                    # Look for closing bracket on subsequent lines
-                    else:
-                        found_closing_bracket = False
-                        for j in range(i + 1, len(lines)):
-                            if "}" in lines[j]:
-                                found_closing_bracket = True
-                                break
-                        if not found_closing_bracket:
-                            print(f"Error: Line {i + 1}: Missing closing bracket for if statement")
-                            return False
-
-            return True
-
-        def complete_if_statement(statement):
+        def check_variable_modification(modification):
             pass
 
         def check_if_statement(statement):
-            return 'sale if'
-
-            pattern = r"\s*if\s*\(\s*(.*)\s*\)\s*\{\s*(.*)\s*\}\s*"
+            pattern = r"\s*si\s*\(.+\)\s*\{\s*.+\s*\}(?:\s*sino\s+si\s*\(.+\)\s*\{\s*.+\s*\})*(?:\s*sino\s*\{\s*.+\s*\})?"
 
             match = re.match(pattern, statement)
             if match:
-                condition, body = match.groups()
-                print("The if-statement is correctly formatted.")
+                message = 'Palabras reservadas: si, sino, sino si\n'
+                return message
             else:
-                print("The if-statement is not correctly formatted.")
+                return "La condicion esta mal declarada."
+
+        # EJEMPLO DE CONTADORESSSSSSSSSSSSSSSSSSSSSSSSSSSS
+        def check_operator_in_token(token):
+            pattern = r"expresion regular"
+
+            match = re.match(pattern, token)
+            if match:
+                self.countOperator += 1
 
         # Extraer el contenido del archivo
         content = file.read()
 
         # Declaracion de variables
-        declaration = 0            # Contador para ver el numero de linea que toca
-        message = ""            # Mensaje final
+        declaration = 0  # Contador para ver el numero de linea que toca
+        message = ""  # Mensaje final
 
         program = content.split("\n")
-        print(program)
 
         for i, token in enumerate(program):
             if token != '':
                 declaration += 1
                 message += f"Info declaracion: {declaration}:\n"
 
-                if 'si' not in token:
-                    message += f"{check_variable_declaration(token)}"
+                check_operator_in_token(token)
 
-                elif 'sino' not in token:
-                    test = ''
-                    print(f"Start: {test}")
+                if 'si' in token and 'sino' not in token:
+                    token = ''
 
                     for new_token in program[i:]:
-                        test += f"{new_token}"
+                        token += f"{new_token}"
 
                         if '}' in new_token and 'sino' not in new_token:
                             break
 
-                        print(test)
-
-                    print(f"Final: {test}")
-
                     message += f"{check_if_statement(token)}"
 
-                    # print(check_syntax(program[i:]))
+                elif 'sino' in token or 'sino si' in token:
+                    continue
+
+                else:
+                    message += f"{check_variable_declaration(token)}"
 
                 message += f"\n\n\n"
 
