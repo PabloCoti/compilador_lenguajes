@@ -1,0 +1,25 @@
+entero int = 10;
+
+decimal double = 314.15;
+
+booleano bool = True;
+booleano bool = False;
+
+cadena string = "hola123";
+cadena string1 = "123hola";
+cadena string2 = "HOLA MUNDO!";
+
+si (int == 10)
+    int += 1;
+} sino {
+    int = 10;
+}
+
+si (string == "hola123")
+{
+    string = "adios321";
+}
+
+hacer{
+    int += 1;
+} mientras (int < 100);
