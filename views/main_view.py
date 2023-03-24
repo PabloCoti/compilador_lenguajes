@@ -1,5 +1,5 @@
 # Importaciones de interfaz
-from PyQt5 import uic                                   # Lanza error, pero es por el pycharm, no porque no funcione
+from PyQt5 import uic  # Lanza error, pero es por el pycharm, no porque no funcione
 from PyQt5.QtWidgets import QMainWindow, QFileDialog
 
 # Importacion del paquete y clase Compile
@@ -80,5 +80,9 @@ class MainView(QMainWindow):
     def compile(self, file):
         compiled = Compiler(file)
         data = compiled.parse()
-
+        data2 = f"Total de Operadores: {compiled.countOperatorPrint} \n " \
+                f"Total de Palabras Reservadas: {compiled.countReserverdWordPrint} \n " \
+                f"Total de Identificadores: {compiled.countIdentifierPrint} \n " \
+                f"Total de Signos: {compiled.countSignPrint} "
+        self.update_fileComponentes_text_edit(data2)
         self.update_fileValues_text_edit(data)

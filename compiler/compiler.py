@@ -18,6 +18,11 @@ class Compiler:
         self.countOperator = 0
         self.countSign = 0
 
+        self.countReserverdWordPrint = 0
+        self.countIdentifierPrint = 0
+        self.countOperatorPrint = 0
+        self.countSignPrint = 0
+
         # Declaramos un diccionario "reservedWord" para saber todos los tkns
         self.reservedWord = {'entero': 'Palabra reservada',
                              'decimal': 'Palabra reservada',
@@ -123,7 +128,7 @@ class Compiler:
 
                         eval(value)
                         self.countReserverdWord += 1
-                        check_declaration_value(declaration)
+                        # check_declaration_value(declaration)
 
                         return message
                     except:
@@ -147,13 +152,44 @@ class Compiler:
             else:
                 return "La condicion esta mal declarada."
 
-        # EJEMPLO DE CONTADORESSSSSSSSSSSSSSSSSSSSSSSSSSSS
-        def check_operator_in_token(token):
-            pattern = r"expresion regular"
+        # FUNCIONES CONTADORES
 
-            match = re.match(pattern, token)
+        def check_operator_in_token(token):
+            pattern = r"[\+\-\*\/\%\=\==\<\>\>=\<=]"
+            match = re.search(pattern, token)
+
             if match:
-                self.countOperator += 1
+                return True
+            else:
+                return False
+
+        def check_identifier_in_token(token):
+            pattern = r"[a-zA-Z][a-zA-Z0-9]*"
+            match = re.search(pattern, token)
+
+            if match:
+                return True
+            else:
+                return False
+
+        def check_reserverdWord_in_token(token):
+            print(token)
+            pattern = r"\b(entero|decimal|booleano|cadena|si|sino|sino si|mientras|hacer|verdadero|falso)\b"
+            match = re.search(pattern, token)
+
+            if match:
+                return True
+            else:
+                return False
+
+        def check_sign_in_token(token):
+            pattern = r"[\(\)\{\}\"\;]"
+            match = re.search(pattern, token)
+
+            if match:
+                return True
+            else:
+                return False
 
         # Extraer el contenido del archivo
         content = file.read()
@@ -166,10 +202,21 @@ class Compiler:
 
         for i, token in enumerate(program):
             if token != '':
+
                 declaration += 1
                 message += f"Info declaracion: {declaration}:\n"
 
-                check_operator_in_token(token)
+                if check_operator_in_token(token):
+                    self.countOperatorPrint += 1
+
+                if check_reserverdWord_in_token(token):
+                    self.countReserverdWordPrint += 1
+
+                if check_sign_in_token(token):
+                    self.countSignPrint += 1
+
+                if check_identifier_in_token(token):
+                    self.countIdentifierPrint += 1
 
                 if 'si' in token and 'sino' not in token:
                     token = ''
