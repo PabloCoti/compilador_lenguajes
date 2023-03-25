@@ -1,5 +1,4 @@
 # Libreria para expresiones regulares
-import numbers
 import re
 
 
@@ -112,16 +111,55 @@ class Compiler:
 
                     return f"Modificacion de variable\nNombre de variable: {var_name}\n", True
 
+        def check_condition_statement(statement):
+            pattern = r"\(\s*([a-zA-Z0-9]*)\s*([==|!=|>=|<=|>|<|is])\s*(.*)\)"
+
+            match = re.match(pattern, statement)
+
+            if not(match):
+                return f"{statement} mal declarado"
+
+            else:
+                return f"{statement} bien declarado"
+
         def check_if_statement(statement):
-            pattern = r"\s*si\s*\(.+\)\s*\{\s*.+\s*\}(?:\s*sino\s+si\s*\(.+\)\s*\{\s*.+\s*\})*(?:\s*sino\s*\{" \
-                      r"\s*.+\s*\})?"
+            pattern = r"\s*(si)\s*(\(.+\))\s*(\{\s*.+\s*\})\s*(sino\s+si)" \
+                      r"\s*(\(.+\))\s*(\{\s*.+\s*\})*\s*(sino)\s*(\{\s*.+\s*\})?"
 
             match = re.match(pattern, statement)
             if match:
-                message = 'Palabras reservadas: si, sino, sino si\n'
+                reserved1, reserved2, reserved3 = match.group(1), match.group(4)if not None else '', \
+                    match.group(7) if not None else ''
+
+                main_condition, other_conditions = match.group(2), match.group(5)
+
+                action1, action2, action3 = match.group(3), match.group(6), match.group(8)
+
+                message = f"Palabras reservadas: {reserved1}, {reserved2}, {reserved3}\n" \
+                          f"Condiciones: {check_condition_statement(main_condition)}, " \
+                          f"{check_condition_statement(other_conditions)}\nAcciones: {action1}, {action2}, {action3}"
+
                 return message
             else:
                 return "La condicion esta mal declarada."
+
+        def check_sign_in_token(token):
+            pattern = r"[\(\)\{\}\"\;]"
+            match = re.search(pattern, token)
+
+            if match:
+                return True
+            else:
+                return False
+
+        def is_token_sign(token):
+            pattern = r"[\(\)\{\}\"\;]"
+            match = re.match(pattern, token)
+
+            if match:
+                return True
+            else:
+                return False
 
         # FUNCIONES CONTADORES
 
@@ -146,24 +184,6 @@ class Compiler:
         def check_reserverdWord_in_token(token):
             pattern = r"\b(entero|decimal|booleano|cadena|si|sino|sino si|mientras|hacer|verdadero|falso)\b"
             match = re.search(pattern, token)
-
-            if match:
-                return True
-            else:
-                return False
-
-        def check_sign_in_token(token):
-            pattern = r"[\(\)\{\}\"\;]"
-            match = re.search(pattern, token)
-
-            if match:
-                return True
-            else:
-                return False
-
-        def is_token_sign(token):
-            pattern = r"[\(\)\{\}\"\;]"
-            match = re.match(pattern, token)
 
             if match:
                 return True
