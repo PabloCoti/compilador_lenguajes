@@ -12,6 +12,7 @@ class Compiler:
         self.countOperatorPrint = 0
         self.countSignPrint = 0
 
+
         # Declaramos un diccionario "reservedWord" para saber todos los tkns
         self.reservedWord = {'entero': 'Palabra reservada',
                              'decimal': 'Palabra reservada',
@@ -173,11 +174,11 @@ class Compiler:
                 return "La condicion esta mal declarada"
 
         def check_while_statement(statement):
-            pattern = r"while\s*\(([^;]+)\)\s*\{([\s\S]*?)\}"
+            pattern = r"mientras\s*\(([^;]+)\)\s*\{([\s\S]*?)\}"
             regex = re.compile(pattern)
 
             if regex.match(statement):
-                message = 'Palabra reservada: while'
+                message = 'Palabra reservada: mientras'
                 return message
             else:
                 return "La condicion esta mal declarada"
@@ -261,7 +262,6 @@ class Compiler:
 
                 else:
                     message += f"{check_variable_declaration(token)}"
-
 
                 message += f"\n\n\n"
 
