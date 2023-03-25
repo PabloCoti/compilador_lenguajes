@@ -80,34 +80,34 @@ class Compiler:
                     return f"{var_name} no existe", False
 
                 else:
-                    value = match.group(3)
-                    prev_value = self.declared_variables[var_name]
-                    mod_value = match.group(3)
-
-                    operation = match.group(2)
-                    if operation == "=":
-                        new_value = mod_value
-
-                    elif operation == "+=":
-                        if isinstance(prev_value, numbers.Number):
-                            print('int')
-                            new_value = prev_value + mod_value
-
-                        elif isinstance(prev_value, float):
-                            print('float')
-                            new_value = float(prev_value) + float(mod_value)
-
-                        elif isinstance(prev_value, str):
-                            print('string')
-                            prev_value = prev_value.replace('"', '')
-                            mod_value = mod_value.replace('"', '')
-
-                            new_value = prev_value + mod_value
-
-                    elif operation == "-=":
-                        new_value = prev_value - mod_value
-
-                    self.declared_variables[var_name] = new_value
+                    # value = match.group(3)
+                    # prev_value = self.declared_variables[var_name]
+                    # mod_value = match.group(3)
+                    #
+                    # operation = match.group(2)
+                    # if operation == "=":
+                    #     new_value = mod_value
+                    #
+                    # elif operation == "+=":
+                    #     if isinstance(prev_value, numbers.Number):
+                    #         print('int')
+                    #         new_value = prev_value + mod_value
+                    #
+                    #     elif isinstance(prev_value, float):
+                    #         print('float')
+                    #         new_value = float(prev_value) + float(mod_value)
+                    #
+                    #     elif isinstance(prev_value, str):
+                    #         print('string')
+                    #         prev_value = prev_value.replace('"', '')
+                    #         mod_value = mod_value.replace('"', '')
+                    #
+                    #         new_value = prev_value + mod_value
+                    #
+                    # elif operation == "-=":
+                    #     new_value = prev_value - mod_value
+                    #
+                    # self.declared_variables[var_name] = new_value
 
                     return f"Modificacion de variable\nNombre de variable: {var_name}\n", True
 
@@ -261,6 +261,7 @@ class Compiler:
 
                 else:
                     message += f"{check_variable_declaration(token)}"
+
 
                 message += f"\n\n\n"
 
