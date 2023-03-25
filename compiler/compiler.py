@@ -1,22 +1,12 @@
 # Libreria para expresiones regulares
+import numbers
 import re
 
-
-# TODO
-# Cambiar diccionarios (a exepcion de reservedWord) por expresiones regulares
-# Cambiar los contadores que dependen de los diccionarios
-# AGREGAR METODOS PARA LOS CONTADORES Y HACER QUE FUCIONEN DENTRO DE LA INTERFAZ
 
 class Compiler:
     def __init__(self, file):
         # Declaramos el archivo
         self.file = file
-
-        # Declaramos contadores de palabras reservadas
-        self.countReserverdWord = 0
-        self.countIdentifier = 0
-        self.countOperator = 0
-        self.countSign = 0
 
         self.countReserverdWordPrint = 0
         self.countIdentifierPrint = 0
@@ -36,78 +26,12 @@ class Compiler:
                              'para': 'Palabra reservada'}
         self.reservedWord_key = self.reservedWord.keys()
 
-        # Declaramos un diccionario "operator" para saber todos los tkns
-        self.operator = {'+': 'Operador',
-                         '-': 'Operador',
-                         '*': 'Operador',
-                         '/': 'Operador',
-                         '%': 'Operador',
-                         '=': 'Operador',
-                         '==': 'Operador',
-                         '<': 'Operador',
-                         '>': 'Operador',
-                         '>=': 'Operador',
-                         '<=': 'Operador'}
-        self.operator_key = self.operator.keys()
-
-        # Declaramos un diccionario "sign" para saber todos los tkns
-        self.sign = {'(': 'Signo',
-                     ')': 'Signo',
-                     '{': 'Signo',
-                     '}': 'Signo',
-                     '"': 'Signo',
-                     ';': 'Signo'}
-        self.sign_key = self.sign.keys()
-
-        # Declaramos un diccionario "identifier" para saber los tkns
-        self.identifier = {'a': 'Identificador',
-                           'b': 'Identificador',
-                           'c': 'Identificador',
-                           'd': 'Identificador',
-                           'e': 'Identificador',
-                           'f': 'Identificador',
-                           'g': 'Identificador',
-                           'h': 'Identificador',
-                           'i': 'Identificador',
-                           'j': 'Identificador',
-                           'k': 'Identificador',
-                           'l': 'Identificador',
-                           'm': 'Identificador',
-                           'n': 'Identificador',
-                           'ñ': 'Identificador',
-                           'o': 'Identificador',
-                           'p': 'Identificador',
-                           'q': 'Identificador',
-                           'r': 'Identificador',
-                           's': 'Identificador',
-                           't': 'Identificador',
-                           'u': 'Identificador',
-                           'v': 'Identificador',
-                           'w': 'Identificador',
-                           'x': 'Identificador',
-                           'y': 'Identificador',
-                           'z': 'Identificador'}
-        self.identifier_key = self.identifier.keys()
-
         self.declared_variables = {}
         self.declared_variables_keys = self.declared_variables.keys()
 
     # Analisis del archivo completo y sus cadenas
     def parse(self):
         file = open(self.file)
-
-        def check_declaration_value(declaration):
-            tokens = declaration.split()
-
-            for token in tokens:
-                if token in self.operator:
-                    self.countOperator += 1
-
-                elif token in self.sign:
-                    self.countSign += 1
-
-                elif token in self.identifier:
-                    self.countIdentifier += 1
 
         def check_variable_declaration(declaration):
             pattern = r"\s*([a-zA-Z_][a-zA-Z0-9_]*)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*([^;]+)\s*;"
@@ -127,7 +51,6 @@ class Compiler:
                         message = f"Tipo de variable: {type}\nNombre de variable: {name}\nValor de la variable: {value}"
 
                         eval(value)
-                        self.countReserverdWord += 1
                         # check_declaration_value(declaration)
 
                         return message
@@ -136,10 +59,58 @@ class Compiler:
                 else:
                     return f"{declaration}\nEl tipo de variable no es correcto"
             else:
-                return f"{declaration}\nLa declaracion de la variable no es correcta"
+                is_modification = check_variable_modification(declaration)
+                if not(is_modification[1]):
+                    return f"{declaration}\nLa declaracion de la variable no es correcta"
+
+                else:
+                    return is_modification[0]
 
         def check_variable_modification(modification):
-            pass
+            pattern = r"\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*([+\-]?=)\s*([^;\n\r]+)\s*;"
+
+            match = re.match(pattern, modification)
+
+            if not(match):
+                return f"{modification} esta mal declarado"
+
+            else:
+                var_name = match.group(1)
+
+                if var_name not in self.declared_variables_keys:
+                    return f"{var_name} no existe", False
+
+                else:
+                    # value = match.group(3)
+                    # prev_value = self.declared_variables[var_name]
+                    # mod_value = match.group(3)
+                    #
+                    # operation = match.group(2)
+                    # if operation == "=":
+                    #     new_value = mod_value
+                    #
+                    # elif operation == "+=":
+                    #     if isinstance(prev_value, numbers.Number):
+                    #         print('int')
+                    #         new_value = prev_value + mod_value
+                    #
+                    #     elif isinstance(prev_value, float):
+                    #         print('float')
+                    #         new_value = float(prev_value) + float(mod_value)
+                    #
+                    #     elif isinstance(prev_value, str):
+                    #         print('string')
+                    #         prev_value = prev_value.replace('"', '')
+                    #         mod_value = mod_value.replace('"', '')
+                    #
+                    #         new_value = prev_value + mod_value
+                    #
+                    # elif operation == "-=":
+                    #     new_value = prev_value - mod_value
+
+                    # self.declared_variables[var_name] = new_value
+
+                    return f"Modificacion de variable\nNombre de variable: {var_name}\n", True
 
         def check_if_statement(statement):
             pattern = r"\s*si\s*\(.+\)\s*\{\s*.+\s*\}(?:\s*sino\s+si\s*\(.+\)\s*\{\s*.+\s*\})*(?:\s*sino\s*\{" \
@@ -173,7 +144,6 @@ class Compiler:
                 return False
 
         def check_reserverdWord_in_token(token):
-            print(token)
             pattern = r"\b(entero|decimal|booleano|cadena|si|sino|sino si|mientras|hacer|verdadero|falso)\b"
             match = re.search(pattern, token)
 
@@ -185,6 +155,15 @@ class Compiler:
         def check_sign_in_token(token):
             pattern = r"[\(\)\{\}\"\;]"
             match = re.search(pattern, token)
+
+            if match:
+                return True
+            else:
+                return False
+
+        def is_token_sign(token):
+            pattern = r"[\(\)\{\}\"\;]"
+            match = re.match(pattern, token)
 
             if match:
                 return True
@@ -232,6 +211,12 @@ class Compiler:
                 elif 'sino' in token or 'sino si' in token:
                     continue
 
+                elif '#' in token:
+                    message += f"Comentario {token}"
+
+                elif is_token_sign(token):
+                    continue
+
                 else:
                     message += f"{check_variable_declaration(token)}"
 
@@ -239,9 +224,3 @@ class Compiler:
 
         file.close()
         return message
-
-    def get_counters(self):
-        print(self.countSign)
-        print(self.countIdentifier)
-        print(self.countOperator)
-        print(self.countReserverdWord)

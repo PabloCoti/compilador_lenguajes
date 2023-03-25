@@ -35,3 +35,7 @@ si (string=="hola123")
 hacer{
     int += 1;
 } mientras (int < 100);
+
+mientras (int < 100){
+    string += "1";
+}
