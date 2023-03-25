@@ -80,34 +80,34 @@ class Compiler:
                     return f"{var_name} no existe", False
 
                 else:
-                    # value = match.group(3)
-                    # prev_value = self.declared_variables[var_name]
-                    # mod_value = match.group(3)
-                    #
-                    # operation = match.group(2)
-                    # if operation == "=":
-                    #     new_value = mod_value
-                    #
-                    # elif operation == "+=":
-                    #     if isinstance(prev_value, numbers.Number):
-                    #         print('int')
-                    #         new_value = prev_value + mod_value
-                    #
-                    #     elif isinstance(prev_value, float):
-                    #         print('float')
-                    #         new_value = float(prev_value) + float(mod_value)
-                    #
-                    #     elif isinstance(prev_value, str):
-                    #         print('string')
-                    #         prev_value = prev_value.replace('"', '')
-                    #         mod_value = mod_value.replace('"', '')
-                    #
-                    #         new_value = prev_value + mod_value
-                    #
-                    # elif operation == "-=":
-                    #     new_value = prev_value - mod_value
+                    value = match.group(3)
+                    prev_value = self.declared_variables[var_name]
+                    mod_value = match.group(3)
 
-                    # self.declared_variables[var_name] = new_value
+                    operation = match.group(2)
+                    if operation == "=":
+                        new_value = mod_value
+
+                    elif operation == "+=":
+                        if isinstance(prev_value, numbers.Number):
+                            print('int')
+                            new_value = prev_value + mod_value
+
+                        elif isinstance(prev_value, float):
+                            print('float')
+                            new_value = float(prev_value) + float(mod_value)
+
+                        elif isinstance(prev_value, str):
+                            print('string')
+                            prev_value = prev_value.replace('"', '')
+                            mod_value = mod_value.replace('"', '')
+
+                            new_value = prev_value + mod_value
+
+                    elif operation == "-=":
+                        new_value = prev_value - mod_value
+
+                    self.declared_variables[var_name] = new_value
 
                     return f"Modificacion de variable\nNombre de variable: {var_name}\n", True
 
@@ -160,6 +160,28 @@ class Compiler:
                 return True
             else:
                 return False
+
+        def check_doWhile_statement(statement):
+            pattern = r"hacer\s*\{[\s\S]*?\}\s*mientras\s*\((.+?)\)\s*;"
+            expresion = re.compile(pattern)
+
+            if expresion.match(statement):
+                message = 'Palabra reservada: hacer-mientras'
+                return message
+
+            else:
+                return "La condicion esta mal declarada"
+
+        def check_while_statement(statement):
+            pattern = r"while\s*\(([^;]+)\)\s*\{([\s\S]*?)\}"
+            regex = re.compile(pattern)
+
+            if regex.match(statement):
+                message = 'Palabra reservada: while'
+                return message
+            else:
+                return "La condicion esta mal declarada"
+
 
         # FUNCIONES CONTADORES
 
