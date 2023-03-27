@@ -12,7 +12,6 @@ class Compiler:
         self.countOperatorPrint = 0
         self.countSignPrint = 0
 
-
         # Declaramos un diccionario "reservedWord" para saber todos los tkns
         self.reservedWord = {'entero': 'Palabra reservada',
                              'decimal': 'Palabra reservada',
@@ -60,7 +59,7 @@ class Compiler:
                     return f"{declaration}\nEl tipo de variable no es correcto"
             else:
                 is_modification = check_variable_modification(declaration)
-                if not(is_modification[1]):
+                if not (is_modification[1]):
                     return f"{declaration}\nLa declaracion de la variable no es correcta"
 
                 else:
@@ -71,7 +70,7 @@ class Compiler:
 
             match = re.match(pattern, modification)
 
-            if not(match):
+            if not (match):
                 return f"{modification} esta mal declarado"
 
             else:
@@ -117,7 +116,7 @@ class Compiler:
 
             match = re.match(pattern, statement)
 
-            if not(match):
+            if not (match):
                 return f"{statement} mal declarado"
 
             else:
@@ -129,8 +128,8 @@ class Compiler:
 
             match = re.match(pattern, statement)
             if match:
-                reserved1, reserved2, reserved3 = match.group(1), match.group(4)if not None else '', \
-                    match.group(7) if not None else ''
+                reserved1, reserved2, reserved3 = match.group(1), match.group(4) if not None else '', \
+                                                  match.group(7) if not None else ''
 
                 main_condition, other_conditions = match.group(2), match.group(5)
 
@@ -143,15 +142,6 @@ class Compiler:
                 return message
             else:
                 return "La condicion esta mal declarada."
-
-        def check_sign_in_token(token):
-            pattern = r"[\(\)\{\}\"\;]"
-            match = re.search(pattern, token)
-
-            if match:
-                return True
-            else:
-                return False
 
         def is_token_sign(token):
             pattern = r"[\(\)\{\}\"\;]"
@@ -171,7 +161,7 @@ class Compiler:
                 return message
 
             else:
-                return "La condicion esta mal declarada"
+                return "La condicion -hacer/mientras- esta mal declarada"
 
         def check_while_statement(statement):
             pattern = r"mientras\s*\(([^;]+)\)\s*\{([\s\S]*?)\}"
@@ -181,37 +171,39 @@ class Compiler:
                 message = 'Palabra reservada: mientras'
                 return message
             else:
-                return "La condicion esta mal declarada"
-
+                return "La condicion -mientras- esta mal declarada"
 
         # FUNCIONES CONTADORES
 
+        def check_sign_in_token(token):
+            pattern = r"[\(\)\{\}\"\;]"
+            match = re.findall(pattern, token)
+
+            if match:
+                return len(match)
+
         def check_operator_in_token(token):
             pattern = r"[\+\-\*\/\%\=\==\<\>\>=\<=]"
-            match = re.search(pattern, token)
+            match = re.findall(pattern, token)
 
             if match:
-                return True
-            else:
-                return False
+                return len(match)
 
         def check_identifier_in_token(token):
-            pattern = r"[a-zA-Z][a-zA-Z0-9]*"
-            match = re.search(pattern, token)
+            pattern = r'\b(?!entero|decimal|booleano|cadena|si|sino|mientras|hacer|verdadero|falso|[0-9])\w+(?!\w*;)(?=(?:[^"]|"[^"]*")*$)\b'
+            # \b(?!entero|decimal|booleano|cadena|si|sino|mientras|hacer|verdadero|falso)[^\W\d]+\b(?=(?:(?:[^"]*"){2})*[^"]*$) casi funciona
+            # \b(?!entero|decimal|booleano|cadena|si|sino|mientras|hacer|verdadero|falso|"|[0-9])\w+\b casi funciona x2 pero reconoce tambien los valores que se le da a la variable
+            match = re.findall(pattern, token)
 
             if match:
-                return True
-            else:
-                return False
+                return len(match)
 
         def check_reserverdWord_in_token(token):
             pattern = r"\b(entero|decimal|booleano|cadena|si|sino|sino si|mientras|hacer|verdadero|falso)\b"
-            match = re.search(pattern, token)
+            match = re.findall(pattern, token)
 
             if match:
-                return True
-            else:
-                return False
+                return len(match)
 
         # Extraer el contenido del archivo
         content = file.read()
@@ -219,6 +211,7 @@ class Compiler:
         # Declaracion de variables
         declaration = 0  # Contador para ver el numero de linea que toca
         message = ""  # Mensaje final
+        message2 = ""
 
         program = content.split("\n")
 
@@ -229,16 +222,18 @@ class Compiler:
                 message += f"Info declaracion: {declaration}:\n"
 
                 if check_operator_in_token(token):
-                    self.countOperatorPrint += 1
+                    self.countOperatorPrint += check_operator_in_token(token)
 
                 if check_reserverdWord_in_token(token):
-                    self.countReserverdWordPrint += 1
+
+                    self.countReserverdWordPrint += check_reserverdWord_in_token(token)
 
                 if check_sign_in_token(token):
-                    self.countSignPrint += 1
+                    self.countSignPrint += check_sign_in_token(token)
 
                 if check_identifier_in_token(token):
-                    self.countIdentifierPrint += 1
+                    print(f"{declaration}: {check_identifier_in_token(token)}")
+                    self.countIdentifierPrint += check_identifier_in_token(token)
 
                 if 'si' in token and 'sino' not in token:
                     token = ''
@@ -263,7 +258,18 @@ class Compiler:
                 else:
                     message += f"{check_variable_declaration(token)}"
 
+                if 'hacer' in token and 'mientras' not in token:
+                    for new_token in program[i:]:
+                        token += f"{new_token}"
+
+                        if '}' in new_token and 'mientras' not in new_token:
+                            break
+                    message += f"{check_doWhile_statement(token)}\n"
+
+                if 'hacer' in token:
+                    message2 += f"{check_while_statement(token)}"
+
                 message += f"\n\n\n"
 
         file.close()
-        return message
+        return message + message2
