@@ -209,7 +209,7 @@ class Compiler:
         content = file.read()
 
         # Declaracion de variables
-        declaration = 0  # Contador para ver el numero de linea que toca
+        # declaration = 0  # Contador para ver el numero de linea que toca
         message = ""  # Mensaje final
         message2 = ""
 
@@ -218,21 +218,19 @@ class Compiler:
         for i, token in enumerate(program):
             if token != '':
 
-                declaration += 1
-                message += f"Info declaracion: {declaration}:\n"
+                # declaration += 1
+                # message += f"Info declaracion: {declaration}:\n"
 
                 if check_operator_in_token(token):
                     self.countOperatorPrint += check_operator_in_token(token)
 
                 if check_reserverdWord_in_token(token):
-
                     self.countReserverdWordPrint += check_reserverdWord_in_token(token)
 
                 if check_sign_in_token(token):
                     self.countSignPrint += check_sign_in_token(token)
 
                 if check_identifier_in_token(token):
-                    print(f"{declaration}: {check_identifier_in_token(token)}")
                     self.countIdentifierPrint += check_identifier_in_token(token)
 
                 if 'si' in token and 'sino' not in token:
@@ -255,10 +253,7 @@ class Compiler:
                 elif is_token_sign(token):
                     continue
 
-                else:
-                    message += f"{check_variable_declaration(token)}"
-
-                if 'hacer' in token and 'mientras' not in token:
+                elif 'hacer' in token and 'mientras' not in token:
                     for new_token in program[i:]:
                         token += f"{new_token}"
 
@@ -266,8 +261,13 @@ class Compiler:
                             break
                     message += f"{check_doWhile_statement(token)}\n"
 
-                if 'hacer' in token:
-                    message2 += f"{check_while_statement(token)}"
+                elif 'hacer' in token:
+                    continue
+
+                else:
+                    message += f"{check_variable_declaration(token)}"
+
+
 
                 message += f"\n\n\n"
 
