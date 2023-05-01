@@ -22,16 +22,52 @@ class Compiler:
                              'sino si': 'Palabra reservada',
                              'mientras': 'Palabra reservada',
                              'hacer': 'Palabra reservada',
-                             'para': 'Palabra reservada'}
+                             'para': 'Palabra reservada',
+                             'func': 'Palabra reservada'}
         self.reservedWord_key = self.reservedWord.keys()
 
         self.declared_variables = {}
         self.declared_variables_keys = self.declared_variables.keys()
 
+        self.function_declared_variables = {}
+        self.function_declared_variables_keys = self.function_declared_variables.keys()
+
     # Analisis del archivo completo y sus cadenas
     def parse(self):
-        file = open(self.file)
+        # FUNCIONES CONTADORES
+        def check_sign_in_token(token):
+            pattern = r"[\(\)\{\}\"\;]"
+            match = re.findall(pattern, token)
 
+            if match:
+                return len(match)
+
+        def check_operator_in_token(token):
+            pattern = r"[\+\-\*\/\%\=\==\<\>\>=\<=]"
+            match = re.findall(pattern, token)
+
+            if match:
+                return len(match)
+
+        def check_identifier_in_token(token):
+            pattern = r'\b(?!entero|decimal|booleano|cadena|si|sino|mientras|hacer|verdadero|falso|[0-9])\w+(?!\w*;)(' \
+                      r'?=(?:[^"]|"[^"]*")*$)\b'
+            # \b(?!entero|decimal|booleano|cadena|si|sino|mientras|hacer|verdadero|falso)[^\W\d]+\b(?=(?:(?:[^"]*"){
+            # 2})*[^"]*$) casi funciona \b(?!entero|decimal|booleano|cadena|si|sino|mientras|hacer|verdadero|falso
+            # |"|[0-9])\w+\b casi funciona x2 pero reconoce tambien los valores que se le da a la variable
+            match = re.findall(pattern, token)
+
+            if match:
+                return len(match)
+
+        def check_reserverdWord_in_token(token):
+            pattern = r"\b(entero|decimal|booleano|cadena|si|sino|sino si|mientras|hacer|verdadero|falso)\b"
+            match = re.findall(pattern, token)
+
+            if match:
+                return len(match)
+
+        # VERIF SINTAX
         def check_variable_declaration(declaration):
             pattern = r"\s*([a-zA-Z_][a-zA-Z0-9_]*)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*([^;]+)\s*;"
 
@@ -76,7 +112,8 @@ class Compiler:
             else:
                 var_name = match.group(1)
 
-                if var_name not in self.declared_variables_keys:
+                if var_name not in self.declared_variables_keys \
+                        and var_name not in self.function_declared_variables_keys:
                     return f"{var_name} no existe", False
 
                 else:
@@ -112,7 +149,7 @@ class Compiler:
                     return f"Modificacion de variable\nNombre de variable: {var_name}\n", True
 
         def check_condition_statement(statement):
-            pattern = r"\(\s*([a-zA-Z0-9]*)\s*([==|!=|>=|<=|>|<|is])\s*(.*)\)"
+            pattern = r"\(\s*(.[^()]+)\s*(==|!=|>=|<=|>|<|is|is not)\s*(.[^()]+)\)"
 
             match = re.match(pattern, statement)
 
@@ -123,21 +160,56 @@ class Compiler:
                 return f"{statement} bien declarado"
 
         def check_if_statement(statement):
-            pattern = r"\s*(si)\s*(\(.+\))\s*(\{\s*.+\s*\})\s*(sino\s+si)" \
-                      r"\s*(\(.+\))\s*(\{\s*.+\s*\})*\s*(sino)\s*(\{\s*.+\s*\})?"
+            pattern = r"\s*((si)\s*(\(.[^()]+\))\s*(\{.[^{}]+\}))\s*((sino si)\s*(\(.[^()]+\))\s*(\{.[^{}]+\}))?\s*((" \
+                      r"sino si)\s*(\(.[^()]+\))\s*(\{.[^{}]+\}))?\s*((sino si)\s*(\(.[^()]+\))\s*(\{.[^{}]+\}))?\s*(" \
+                      r"(sino si)\s*(\(.[^()]+\))\s*(\{.[^{}]+\}))?\s*((sino si)\s*(\(.[^()]+\))\s*(\{.[^{" \
+                      r"}]+\}))?\s*((sino si)\s*(\(.[^()]+\))\s*(\{.[^{}]+\}))?\s*((sino)\s*(\{.[^{}]+\}))?"
+
+            """
+            grupo 0: EXPRESION COMPLETA
+            grupo 1: si (CONDICION) {ACCION SI VERDADERO}
+            grupo 2: si
+            grupo 3: (CONDICION)
+            grupo 4: {ACCION SI VERDADERO}
+            grupo 5: sino si (CONDICION) {ACCION SI VERDADERO}
+            grupo 6: sino si
+            grupo 7: (CONDICION)
+            grupo 8: {ACCION SI VERDADERO}
+            grupo 29: sino {ACCION}
+            grupo 30: sino
+            grupo 31: {ACCION}
+
+            ESTA SUJETO A BUGS EN CASO DE VARIOS "sino si" DEBIDO A LA FORMA EN LA QUE OPERA
+            LA EXPRESION REGULAR AL MOMENTO DE EVALUAR
+            
+            (SE INTENTO SOLUCIONAR INSERTANDO VARIOS SINO SI EN LA EXPRESION REGULAR, MAS NO ES UNA SOLUCION
+            ABSOLUTA)
+            """
 
             match = re.match(pattern, statement)
             if match:
-                reserved1, reserved2, reserved3 = match.group(1), match.group(4) if not None else '', \
-                                                  match.group(7) if not None else ''
+                used_reserved = [match.group(2)]
+                conditions = [match.group(3)]
+                actions = [match.group(4)]
 
-                main_condition, other_conditions = match.group(2), match.group(5)
+                for number in range(0, 31):
+                    group = match.group(number)
+                    if group is not None:
+                        if number == 6 or number == 30:
+                            used_reserved.append(group)
 
-                action1, action2, action3 = match.group(3), match.group(6), match.group(8)
+                        elif number == 7 or number == 11 or number == 15 or number == 19 or number == 23 or number == 27:
+                            conditions.append(group)
 
-                message = f"Palabras reservadas: {reserved1}, {reserved2}, {reserved3}\n" \
-                          f"Condiciones: {check_condition_statement(main_condition)}, " \
-                          f"{check_condition_statement(other_conditions)}\nAcciones: {action1}, {action2}, {action3}"
+                        elif number == 8 or number == 12 or number == 16 or number == 20 or number == 24 or number == 28 or number == 31:
+                            actions.append(group)
+
+                message = f"Palabras reservadas: {', '.join(used_reserved)}\nCondiciones: "
+
+                for c in conditions:
+                    message += f"{check_condition_statement(c)}, "
+
+                message += f"\nAcciones: {', '.join(actions)}"
 
                 return message
             else:
@@ -153,74 +225,91 @@ class Compiler:
                 return False
 
         def check_doWhile_statement(statement):
-            pattern = r"hacer\s*\{[\s\S]*?\}\s*mientras\s*\((.+?)\)\s*;"
-            expresion = re.compile(pattern)
+            pattern = r"(hacer)\s*(\{[\s\S]*?\})\s*(mientras)\s*(\(.[^()]+\))\s*;"
 
-            if expresion.match(statement):
-                message = 'Palabra reservada: hacer-mientras'
-                return message
+            match = re.match(pattern, statement)
+            if match:
+                message = f"Palabra reservada: hacer, mientras\nCondicion: {match.group(4)}\nAcciones: {match.group(2)}"
 
             else:
-                return "La condicion -hacer/mientras- esta mal declarada"
+                message =  "La condicion -hacer/mientras- esta mal declarada"
+
+            return message
 
         def check_while_statement(statement):
-            pattern = r"mientras\s*\(([^;]+)\)\s*\{([\s\S]*?)\}"
-            regex = re.compile(pattern)
+            pattern = r"(mientras)\s*(\([^;]+\))\s*(\{[\s\S]*?\})"
 
-            if regex.match(statement):
-                message = 'Palabra reservada: mientras'
-                return message
+
+            match = re.match(pattern, statement)
+            if match:
+                message = f"Palabra reservada: mientras\nCondiciones: {check_condition_statement(match.group(2))}\nAcciones: {match.group(3)}"
+
             else:
-                return "La condicion -mientras- esta mal declarada"
+                message = "La condicion -mientras- esta mal declarada"
+            return message
 
-        # FUNCIONES CONTADORES
+        def check_atribute_statement(statement):
+            pattern = r"\s*([a-zA-Z0-9_]*)\s+([a-zA-Z0-9_]*)\s*=?\s*(.*)"
+            message = ''
 
-        def check_sign_in_token(token):
-            pattern = r"[\(\)\{\}\"\;]"
-            match = re.findall(pattern, token)
-
+            match = re.match(pattern, statement)
             if match:
-                return len(match)
+                name = match.group(2)
+                value = match.group(3)
 
-        def check_operator_in_token(token):
-            pattern = r"[\+\-\*\/\%\=\==\<\>\>=\<=]"
-            match = re.findall(pattern, token)
+                if value == '':
+                    self.function_declared_variables[name] = value
+                    message = f"'{statement}' bien declarado\t"
 
+                else:
+                    try:
+                        eval(value)
+                        self.function_declared_variables[name] = value
+                        message = f"{statement} bien declarado"
+
+                    except:
+                        message = 'ATRIBUTO MAL DECLARADO'
+
+            else:
+                message = f"{statement} mal declarado"
+
+            return message
+
+
+        def check_function_statement(statement):
+            pattern = r"\s*(func)\s*([a-zA-Z0-9_]+)\s*\(([^()]*)\)\s*([^{}]+)\s*(end func\([^()]+\);)"
+
+            match = re.match(pattern, statement)
             if match:
-                return len(match)
+                message = f"Palabra reservada: func: {check_condition_statement(match.group(1))}\nNombre de la funcion: {match.group(2)}\n"
+                atributes = match.group(3)
+                if atributes is not None:
+                    self.function_declared_variables.clear()
 
-        def check_identifier_in_token(token):
-            pattern = r'\b(?!entero|decimal|booleano|cadena|si|sino|mientras|hacer|verdadero|falso|[0-9])\w+(?!\w*;)(?=(?:[^"]|"[^"]*")*$)\b'
-            # \b(?!entero|decimal|booleano|cadena|si|sino|mientras|hacer|verdadero|falso)[^\W\d]+\b(?=(?:(?:[^"]*"){2})*[^"]*$) casi funciona
-            # \b(?!entero|decimal|booleano|cadena|si|sino|mientras|hacer|verdadero|falso|"|[0-9])\w+\b casi funciona x2 pero reconoce tambien los valores que se le da a la variable
-            match = re.findall(pattern, token)
+                    atribute_list = atributes.split(',')
 
-            if match:
-                return len(match)
+                    message += 'Atributes: '
 
-        def check_reserverdWord_in_token(token):
-            pattern = r"\b(entero|decimal|booleano|cadena|si|sino|sino si|mientras|hacer|verdadero|falso)\b"
-            match = re.findall(pattern, token)
+                    for a in atribute_list:
+                        message += check_atribute_statement(a)
 
-            if match:
-                return len(match)
+                    message += f"\nAcciones: {match.group(4)}"
+            else:
+                message = "La funcion esta mal declarada"
+            return message
+
+        file = open(self.file)
 
         # Extraer el contenido del archivo
         content = file.read()
 
-        # Declaracion de variables
-        # declaration = 0  # Contador para ver el numero de linea que toca
-        message = ""  # Mensaje final
-        message2 = ""
-
         program = content.split("\n")
+
+        # Declaracion de variables
+        message = ""  # Mensaje final
 
         for i, token in enumerate(program):
             if token != '':
-
-                # declaration += 1
-                # message += f"Info declaracion: {declaration}:\n"
-
                 if check_operator_in_token(token):
                     self.countOperatorPrint += check_operator_in_token(token)
 
@@ -242,34 +331,50 @@ class Compiler:
                         if '}' in new_token and 'sino' not in new_token:
                             break
 
-                    message += f"{check_if_statement(token)}"
+                    message += f"{check_if_statement(token)}\n\n\n"
 
-                elif 'sino' in token or 'sino si' in token:
-                    continue
-
-                elif '#' in token:
-                    message += f"Comentario {token}"
+                elif '#' in token[0]:
+                    message += f"Comentario: {token.replace('#', '')}\n\n\n"
 
                 elif is_token_sign(token):
-                    continue
+                    message += ''
 
-                elif 'hacer' in token and 'mientras' not in token:
+                elif 'hacer' in token:
+                    token = ''
+
+                    for new_token in program[i:]:
+                        token += f"{new_token}"
+                        print(token)
+
+                        if '}' in new_token and 'mientras' in new_token:
+                            break
+
+                    message += f"{check_doWhile_statement(token)}\n\n\n"
+
+                elif 'mientras' in token and '}' not in token:
+                    token = ''
+
                     for new_token in program[i:]:
                         token += f"{new_token}"
 
                         if '}' in new_token and 'mientras' not in new_token:
                             break
-                    message += f"{check_doWhile_statement(token)}\n"
 
-                elif 'hacer' in token:
-                    continue
+                    message += f"{check_while_statement(token)}\n\n\n"
+
+                elif 'func' in token and 'end' not in token:
+                    token = ''
+
+                    function_name = program[i:][0].split()[1]
+                    for new_token in program[i:]:
+                        token += f"{new_token}"
+
+                        if 'end function' in new_token and function_name in new_token:
+                            break
+                    message += f"{check_function_statement(token)}\n\n\n"
 
                 else:
-                    message += f"{check_variable_declaration(token)}"
-
-
-
-                message += f"\n\n\n"
+                    message += f"{check_variable_declaration(token)}\n\n\n"
 
         file.close()
-        return message + message2
+        return message

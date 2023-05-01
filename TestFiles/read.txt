@@ -9,6 +9,7 @@ cadena string = "hola123";
 cadena string1 = "123hola";
 cadena string2 = "HOLA MUNDO!";
 
+# esto es un sino mal declarado
 sino {
     int = 1;
 }
